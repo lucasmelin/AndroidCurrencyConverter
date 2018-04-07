@@ -24,20 +24,21 @@ public class ConvertCurrencyActivity extends AppCompatActivity {
      * Called when the user taps the EXCHANGE button
      */
     public void convertCurrency(View view) {
-        EditText cdn_amount_text = (EditText) findViewById(R.id.cdn_dollars);
-        EditText local_currency_text = (EditText) findViewById(R.id.local_currency_amount);
+        EditText cdn_amount_text = findViewById(R.id.cdn_dollars);
+        EditText local_currency_text = findViewById(R.id.local_currency_amount);
 
         String cdnTextValue = cdn_amount_text.getText().toString();
-        String localTextValue = cdn_amount_text.getText().toString();
+        String localTextValue = local_currency_text.getText().toString();
 
         double cdn_dollars;
         double local_amount;
-        if (!"".equals(cdnTextValue)) {
+        String validDouble = "^(-?)(0|([1-9][0-9]*))(\\.[0-9]+)?$";
+        if (!"".equals(cdnTextValue) && cdnTextValue.matches(validDouble)) {
             // Convert from CDN to Local Currency
             cdn_dollars = Double.parseDouble(cdnTextValue);
             local_amount = cdn_dollars * conversion;
             local_currency_text.setText(String.valueOf(local_amount));
-        } else if (!"".equals(localTextValue)) {
+        } else if (!"".equals(localTextValue) && localTextValue.matches(validDouble)) {
             // Convert from Local Currency to CDN
             local_amount = Double.parseDouble(localTextValue);
             cdn_dollars = local_amount / conversion;
@@ -45,6 +46,16 @@ public class ConvertCurrencyActivity extends AppCompatActivity {
         }
 
 
+    }
+
+    /**
+     * Called when the user taps the Clear Amounts button
+     */
+    public void clearCurrencyFields(View view) {
+        EditText cdn_amount_text = findViewById(R.id.cdn_dollars);
+        EditText local_currency_text = findViewById(R.id.local_currency_amount);
+        cdn_amount_text.getText().clear();
+        local_currency_text.getText().clear();
     }
 
 
