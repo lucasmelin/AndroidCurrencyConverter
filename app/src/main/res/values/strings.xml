@@ -2,4 +2,11 @@
     <string name="app_name">Currency Converter</string>
     <string name="edit_message">Enter a message</string>
     <string name="button_send">Send</string>
+    <string name="radio_USD">$ US</string>
+    <string name="radio_EUR">€ Euro</string>
+    <string name="radio_CNY">¥ Chinese Yuan</string>
+    <string name="exchangeprompt_message">To which currency do you want to exchange?</string>
+    <string name="cdnamount_message">$CDN to exchange:</string>
+    <string name="convertedamount_message">Total Local Currency</string>
+    <string name="button_exchange">EXCHANGE</string>
 </resources>
