@@ -3,9 +3,11 @@ package com.lucasmelin.currencyconverter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.widget.TextView;
+import android.view.View;
+import android.widget.EditText;
 
 public class ConvertCurrencyActivity extends AppCompatActivity {
+    public Double conversion;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -14,10 +16,36 @@ public class ConvertCurrencyActivity extends AppCompatActivity {
 
         // Get the Intent that started this activity and extract the conversion value
         Intent intent = getIntent();
-        String message = intent.getStringExtra(MainActivity.EXTRA_MESSAGE);
-
-        // Capture the layout's TextView and set the string as its text
-        TextView textView = findViewById(R.id.textView);
-        textView.setText(message);
+        // Default exchange rate if not found is 1
+        conversion = intent.getDoubleExtra(MainActivity.EXTRA_CONVERSION, 1);
     }
+
+    /**
+     * Called when the user taps the EXCHANGE button
+     */
+    public void convertCurrency(View view) {
+        EditText cdn_amount_text = (EditText) findViewById(R.id.cdn_dollars);
+        EditText local_currency_text = (EditText) findViewById(R.id.local_currency_amount);
+
+        String cdnTextValue = cdn_amount_text.getText().toString();
+        String localTextValue = cdn_amount_text.getText().toString();
+
+        double cdn_dollars;
+        double local_amount;
+        if (!"".equals(cdnTextValue)) {
+            // Convert from CDN to Local Currency
+            cdn_dollars = Double.parseDouble(cdnTextValue);
+            local_amount = cdn_dollars * conversion;
+            local_currency_text.setText(String.valueOf(local_amount));
+        } else if (!"".equals(localTextValue)) {
+            // Convert from Local Currency to CDN
+            local_amount = Double.parseDouble(localTextValue);
+            cdn_dollars = local_amount / conversion;
+            cdn_amount_text.setText(String.valueOf(cdn_dollars));
+        }
+
+
+    }
+
+
 }
