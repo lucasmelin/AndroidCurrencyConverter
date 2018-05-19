@@ -65,21 +65,16 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void getConversionValues() {
-        String url = "http://data.fixer.io/api/latest?access_key=c2378bd062393415d0b2a62eea1949cd&symbols=USD,CAD,CNY&format=1";
+        String url = "https://www.bankofcanada.ca/valet/observations/group/FX_RATES_DAILY/json?recent=1";
         JsonObjectRequest jsonObjectRequest = new JsonObjectRequest(Request.Method.GET, url, null, new Response.Listener<JSONObject>() {
             @Override
             public void onResponse(JSONObject response) {
                 try {
-                    JSONObject rates = response.getJSONObject("rates");
+                    JSONObject rates = response.getJSONArray("observations").getJSONObject(0);
 
-                    Double usd_apiVal = rates.getDouble("USD");
-                    Double cdn_apiVal = rates.getDouble("CAD");
-                    Double cny_apiVal = rates.getDouble("CNY");
-
-                    // Do the math to convert the API values in EUR to CDN rates
-                    usd_conversion = usd_apiVal / cdn_apiVal;
-                    eur_conversion = 1.0 / cdn_apiVal;
-                    cny_conversion = cny_apiVal / cdn_apiVal;
+                    usd_conversion = rates.getJSONObject("FXUSDCAD").getDouble("v");
+                    eur_conversion = rates.getJSONObject("FXEURCAD").getDouble("v");
+                    cny_conversion = rates.getJSONObject("FXCNYCAD").getDouble("v");
 
                 } catch (JSONException e) {
                     e.printStackTrace();

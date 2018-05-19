@@ -47,13 +47,13 @@ public class ConvertCurrencyActivity extends AppCompatActivity {
         if (!"".equals(cdnTextValue) && cdnTextValue.matches(validDouble)) {
             // Convert from CDN to Local Currency
             cdn_dollars = Double.parseDouble(cdnTextValue);
-            local_amount = cdn_dollars * conversion;
+            local_amount = cdn_dollars / conversion;
             // Format the double to a string with two decimal places before outputting
             local_currency_text.setText(currencyFormat.format(local_amount));
         } else if (!"".equals(localTextValue) && localTextValue.matches(validDouble)) {
             // Convert from Local Currency to CDN
             local_amount = Double.parseDouble(localTextValue);
-            cdn_dollars = local_amount / conversion;
+            cdn_dollars = local_amount * conversion;
             // Format the double to a string with two decimal places before outputting
             cdn_amount_text.setText(currencyFormat.format(cdn_dollars));
         }
