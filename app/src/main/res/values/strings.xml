@@ -10,4 +10,5 @@
     <string name="convertedamount_message">Total Local Currency</string>
     <string name="button_exchange">EXCHANGE</string>
     <string name="button_clear">Clear Amounts</string>
+    <string name="saved_api_call_key">"com.lucas.CurrencyConverter.LASTAPICALL"</string>
 </resources>
