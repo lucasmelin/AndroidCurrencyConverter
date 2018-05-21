@@ -1,12 +1,12 @@
 package com.lucasmelin.currencyconverter
 
 import android.content.Context
-import android.content.Intent
 import android.content.SharedPreferences
 import android.os.Bundle
 import android.support.v7.app.AppCompatActivity
 import android.view.View
 import android.widget.AdapterView
+import android.widget.EditText
 import android.widget.Spinner
 import com.android.volley.Request
 import com.android.volley.Response
@@ -14,6 +14,7 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONException
 import org.json.JSONObject
+import java.text.DecimalFormat
 import java.time.Instant
 import java.time.LocalDate
 import java.time.LocalDateTime
@@ -23,6 +24,7 @@ import java.time.temporal.ChronoUnit
 class MainActivity : AppCompatActivity() {
     private var audConversion: Double = 0.9670
     private var brlConversion: Double = 0.3443
+    private val cadConversion: Double = 1.0
     private var cnyConversion: Double = 0.2019
     private var eurConversion: Double = 1.5163
     private var hkdConversion: Double = 0.164082
@@ -47,13 +49,14 @@ class MainActivity : AppCompatActivity() {
     private var gbpConversion: Double = 1.735
     private var usdConversion: Double = 1.2880
     private var vndConversion: Double = 0.000057
-    var conversion: Double? = null
+    var startConversion: Double = 1.0
+    var localConversion: Double = 1.0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        // Call the API to retrieve the current conversion rates
-        val sharedPref = this@MainActivity.getPreferences(Context.MODE_PRIVATE) ?: return
+        // Call the API to retrieve the current startConversion rates
+        val sharedPref: SharedPreferences = this@MainActivity.getPreferences(Context.MODE_PRIVATE) ?: return
         val lastAPICall = sharedPref.getLong(getString(R.string.saved_api_call_key), Long.MIN_VALUE)
         val lastTimestamp = Instant.ofEpochMilli(lastAPICall).atZone(ZoneId.systemDefault()).toLocalDate()
         val daysBetween = ChronoUnit.DAYS.between(lastTimestamp, LocalDate.now())
@@ -64,8 +67,8 @@ class MainActivity : AppCompatActivity() {
             loadConversionFromSharedPreferences()
         }
 
-        val currencySpinner = findViewById(R.id.currency_spinner) as Spinner
-        currencySpinner.setSelection(0, false)
+        val currencySpinner = findViewById<Spinner>(R.id.currency_spinner)
+        //currencySpinner.setSelection(0, false)
         currencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) {
                 TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
@@ -74,36 +77,75 @@ class MainActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>, view: View, pos: Int, id: Long) {
                 val selected = parent.getItemAtPosition(pos).toString()
                 when (selected) {
-                    "Australian dollar" -> conversion = audConversion
-                    "Brazilian real" -> conversion = brlConversion
-                    "Chinese renminbi" -> conversion = cnyConversion
-                    "European euro" -> conversion = eurConversion
-                    "Hong Kong dollar" -> conversion = hkdConversion
-                    "Indian rupee" -> conversion = idrConversion
-                    "Indonesian rupiah" -> conversion = idrConversion
-                    "Japanese yen" -> conversion = jpyConversion
-                    "Malaysian ringgit" -> conversion = myrConversion
-                    "Mexican peso" -> conversion = mxnConversion
-                    "New Zealand dollar" -> conversion = nzdConversion
-                    "Norwegian kron" -> conversion = nokConversion
-                    "Peruvian new sol" -> conversion = penConversion
-                    "Russian ruble" -> conversion = rubConversion
-                    "Saudi riyal" -> conversion = sarConversion
-                    "Singapore dollar" -> conversion = sgdConversion
-                    "South African rand" -> conversion = sarConversion
-                    "South Korean won" -> conversion = krwConversion
-                    "Swedish krona" -> conversion = sekConversion
-                    "Swiss franc" -> conversion = chfConversion
-                    "Taiwanese dollar" -> conversion = twdConversion
-                    "Thai baht" -> conversion = thbConversion
-                    "Turkish lira" -> conversion = tryConversion
-                    "UK pound sterling" -> conversion = gbpConversion
-                    "US dollar" -> conversion = usdConversion
-                    "Vietnamese dong" -> conversion = vndConversion
+                    "Australian dollar" -> startConversion = audConversion
+                    "Brazilian real" -> startConversion = brlConversion
+                    "Canadian dollar" -> startConversion = cadConversion
+                    "Chinese renminbi" -> startConversion = cnyConversion
+                    "European euro" -> startConversion = eurConversion
+                    "Hong Kong dollar" -> startConversion = hkdConversion
+                    "Indian rupee" -> startConversion = inrConversion
+                    "Indonesian rupiah" -> startConversion = idrConversion
+                    "Japanese yen" -> startConversion = jpyConversion
+                    "Malaysian ringgit" -> startConversion = myrConversion
+                    "Mexican peso" -> startConversion = mxnConversion
+                    "New Zealand dollar" -> startConversion = nzdConversion
+                    "Norwegian kron" -> startConversion = nokConversion
+                    "Peruvian new sol" -> startConversion = penConversion
+                    "Russian ruble" -> startConversion = rubConversion
+                    "Saudi riyal" -> startConversion = sarConversion
+                    "Singapore dollar" -> startConversion = sgdConversion
+                    "South African rand" -> startConversion = sarConversion
+                    "South Korean won" -> startConversion = krwConversion
+                    "Swedish krona" -> startConversion = sekConversion
+                    "Swiss franc" -> startConversion = chfConversion
+                    "Taiwanese dollar" -> startConversion = twdConversion
+                    "Thai baht" -> startConversion = thbConversion
+                    "Turkish lira" -> startConversion = tryConversion
+                    "UK pound sterling" -> startConversion = gbpConversion
+                    "US dollar" -> startConversion = usdConversion
+                    "Vietnamese dong" -> startConversion = vndConversion
                 }
-                val intent = Intent(parent.context, ConvertCurrencyActivity::class.java)
-                intent.putExtra(EXTRA_CONVERSION, conversion)
-                startActivity(intent)
+            }
+        }
+
+        val localCurrencySpinner = findViewById<Spinner>(R.id.currency_spinner2)
+        //localCurrencySpinner.setSelection(0, false)
+        localCurrencySpinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onNothingSelected(parent: AdapterView<*>?) {
+                TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+            }
+
+            override fun onItemSelected(parent: AdapterView<*>, view: View, pos: Int, id: Long) {
+                val selected = parent.getItemAtPosition(pos).toString()
+                when (selected) {
+                    "Australian dollar" -> localConversion = audConversion
+                    "Brazilian real" -> localConversion = brlConversion
+                    "Canadian dollar" -> localConversion = cadConversion
+                    "Chinese renminbi" -> localConversion = cnyConversion
+                    "European euro" -> localConversion = eurConversion
+                    "Hong Kong dollar" -> localConversion = hkdConversion
+                    "Indian rupee" -> localConversion = inrConversion
+                    "Indonesian rupiah" -> localConversion = idrConversion
+                    "Japanese yen" -> localConversion = jpyConversion
+                    "Malaysian ringgit" -> localConversion = myrConversion
+                    "Mexican peso" -> localConversion = mxnConversion
+                    "New Zealand dollar" -> localConversion = nzdConversion
+                    "Norwegian kron" -> localConversion = nokConversion
+                    "Peruvian new sol" -> localConversion = penConversion
+                    "Russian ruble" -> localConversion = rubConversion
+                    "Saudi riyal" -> localConversion = sarConversion
+                    "Singapore dollar" -> localConversion = sgdConversion
+                    "South African rand" -> localConversion = sarConversion
+                    "South Korean won" -> localConversion = krwConversion
+                    "Swedish krona" -> localConversion = sekConversion
+                    "Swiss franc" -> localConversion = chfConversion
+                    "Taiwanese dollar" -> localConversion = twdConversion
+                    "Thai baht" -> localConversion = thbConversion
+                    "Turkish lira" -> localConversion = tryConversion
+                    "UK pound sterling" -> localConversion = gbpConversion
+                    "US dollar" -> localConversion = usdConversion
+                    "Vietnamese dong" -> localConversion = vndConversion
+                }
             }
         }
 
@@ -200,40 +242,93 @@ class MainActivity : AppCompatActivity() {
 
     private fun loadConversionFromSharedPreferences() {
         val sharedPref = this@MainActivity.getPreferences(Context.MODE_PRIVATE)
+        val conversionDefault = 1.0
 
-        audConversion = sharedPref.getDouble(getString(R.string.aud_conversion), 1.0)
-        brlConversion = sharedPref.getDouble(getString(R.string.brl_conversion), 1.0)
-        cnyConversion = sharedPref.getDouble(getString(R.string.cny_conversion), 1.0)
-        eurConversion = sharedPref.getDouble(getString(R.string.eur_conversion), 1.0)
-        hkdConversion = sharedPref.getDouble(getString(R.string.hkd_conversion), 1.0)
-        inrConversion = sharedPref.getDouble(getString(R.string.inr_conversion), 1.0)
-        idrConversion = sharedPref.getDouble(getString(R.string.idr_conversion), 1.0)
-        jpyConversion = sharedPref.getDouble(getString(R.string.jpy_conversion), 1.0)
-        myrConversion = sharedPref.getDouble(getString(R.string.myr_conversion), 1.0)
-        mxnConversion = sharedPref.getDouble(getString(R.string.mxn_conversion), 1.0)
-        nzdConversion = sharedPref.getDouble(getString(R.string.nzd_conversion), 1.0)
-        nokConversion = sharedPref.getDouble(getString(R.string.nok_conversion), 1.0)
-        penConversion = sharedPref.getDouble(getString(R.string.pen_conversion), 1.0)
-        rubConversion = sharedPref.getDouble(getString(R.string.rub_conversion), 1.0)
-        sarConversion = sharedPref.getDouble(getString(R.string.sar_conversion), 1.0)
-        sgdConversion = sharedPref.getDouble(getString(R.string.sgd_conversion), 1.0)
-        zarConversion = sharedPref.getDouble(getString(R.string.zar_conversion), 1.0)
-        krwConversion = sharedPref.getDouble(getString(R.string.krw_conversion), 1.0)
-        sekConversion = sharedPref.getDouble(getString(R.string.sek_conversion), 1.0)
-        chfConversion = sharedPref.getDouble(getString(R.string.chf_conversion), 1.0)
-        twdConversion = sharedPref.getDouble(getString(R.string.twd_conversion), 1.0)
-        thbConversion = sharedPref.getDouble(getString(R.string.thb_conversion), 1.0)
-        tryConversion = sharedPref.getDouble(getString(R.string.try_conversion), 1.0)
-        gbpConversion = sharedPref.getDouble(getString(R.string.gbp_conversion), 1.0)
-        usdConversion = sharedPref.getDouble(getString(R.string.usd_conversion), 1.0)
-        vndConversion = sharedPref.getDouble(getString(R.string.vnd_conversion), 1.0)
+        audConversion = sharedPref.getDouble(getString(R.string.aud_conversion), conversionDefault)
+        brlConversion = sharedPref.getDouble(getString(R.string.brl_conversion), conversionDefault)
+        cnyConversion = sharedPref.getDouble(getString(R.string.cny_conversion), conversionDefault)
+        eurConversion = sharedPref.getDouble(getString(R.string.eur_conversion), conversionDefault)
+        hkdConversion = sharedPref.getDouble(getString(R.string.hkd_conversion), conversionDefault)
+        inrConversion = sharedPref.getDouble(getString(R.string.inr_conversion), conversionDefault)
+        idrConversion = sharedPref.getDouble(getString(R.string.idr_conversion), conversionDefault)
+        jpyConversion = sharedPref.getDouble(getString(R.string.jpy_conversion), conversionDefault)
+        myrConversion = sharedPref.getDouble(getString(R.string.myr_conversion), conversionDefault)
+        mxnConversion = sharedPref.getDouble(getString(R.string.mxn_conversion), conversionDefault)
+        nzdConversion = sharedPref.getDouble(getString(R.string.nzd_conversion), conversionDefault)
+        nokConversion = sharedPref.getDouble(getString(R.string.nok_conversion), conversionDefault)
+        penConversion = sharedPref.getDouble(getString(R.string.pen_conversion), conversionDefault)
+        rubConversion = sharedPref.getDouble(getString(R.string.rub_conversion), conversionDefault)
+        sarConversion = sharedPref.getDouble(getString(R.string.sar_conversion), conversionDefault)
+        sgdConversion = sharedPref.getDouble(getString(R.string.sgd_conversion), conversionDefault)
+        zarConversion = sharedPref.getDouble(getString(R.string.zar_conversion), conversionDefault)
+        krwConversion = sharedPref.getDouble(getString(R.string.krw_conversion), conversionDefault)
+        sekConversion = sharedPref.getDouble(getString(R.string.sek_conversion), conversionDefault)
+        chfConversion = sharedPref.getDouble(getString(R.string.chf_conversion), conversionDefault)
+        twdConversion = sharedPref.getDouble(getString(R.string.twd_conversion), conversionDefault)
+        thbConversion = sharedPref.getDouble(getString(R.string.thb_conversion), conversionDefault)
+        tryConversion = sharedPref.getDouble(getString(R.string.try_conversion), conversionDefault)
+        gbpConversion = sharedPref.getDouble(getString(R.string.gbp_conversion), conversionDefault)
+        usdConversion = sharedPref.getDouble(getString(R.string.usd_conversion), conversionDefault)
+        vndConversion = sharedPref.getDouble(getString(R.string.vnd_conversion), conversionDefault)
     }
 
-    fun SharedPreferences.Editor.putDouble(key: String, double: Double) =
+    private fun SharedPreferences.Editor.putDouble(key: String, double: Double) =
             putLong(key, java.lang.Double.doubleToRawLongBits(double))
 
-    fun SharedPreferences.getDouble(key: String, default: Double) =
+    private fun SharedPreferences.getDouble(key: String, default: Double) =
             java.lang.Double.longBitsToDouble(getLong(key, java.lang.Double.doubleToRawLongBits(default)))
+
+
+    fun convertCurrency(view: View) {
+        val startDollars: Double
+        val localAmount: Double
+        // Regex to validate the input, even though the EditText is set
+        // to entering only numbers
+        val validDouble = "^(-?)(0|([1-9][0-9]*))(\\.[0-9]+)?$"
+        // Format to use when outputting converted currency
+        val currencyFormat = DecimalFormat("00.00")
+
+        val startAmountText = findViewById<EditText>(R.id.cdn_dollars)
+        val localCurrencyText = findViewById<EditText>(R.id.local_currency_amount)
+
+        // Get the amounts that have been entered in the EditText boxes
+        val cdnTextValue = startAmountText.text.toString()
+        val localTextValue = localCurrencyText.text.toString()
+
+        // If a valid number was entered in the Start EditText field, convert to
+        // LocalCurrency
+        if ("" != cdnTextValue && cdnTextValue.matches(validDouble.toRegex())) {
+            // Convert from start to Local Currency
+            startDollars = java.lang.Double.parseDouble(cdnTextValue)
+            localAmount = startDollars * (startConversion.div(localConversion))
+            // Format the double to a string with two decimal places before outputting
+            localCurrencyText.setText(currencyFormat.format(localAmount))
+        } else if ("" != localTextValue && localTextValue.matches(validDouble.toRegex())) {
+            // Convert from Local Currency to start
+            localAmount = java.lang.Double.parseDouble(localTextValue)
+            startDollars = localAmount * (localConversion.div(startConversion))
+            // Format the double to a string with two decimal places before outputting
+            startAmountText.setText(currencyFormat.format(startDollars))
+        }
+    }
+
+    /**
+     * Called when the user taps the Clear Amounts button
+     */
+    fun clearCurrencyFields(view: View) {
+        // Get both EditText fields
+        val cdnAmountText = findViewById<EditText>(R.id.cdn_dollars)
+        val localCurrencyText = findViewById<EditText>(R.id.local_currency_amount)
+        // Clear the EditText fields
+        cdnAmountText.text.clear()
+        localCurrencyText.text.clear()
+    }
+
+    // Nullable division operator
+    operator fun Double?.div(other: Double?) = if (this != null && other != null) this / other else null
+
+    // Nullable multiplication operator
+    operator fun Double?.times(other: Double?) = if (this != null && other != null) this * other else null
 
 
 }
